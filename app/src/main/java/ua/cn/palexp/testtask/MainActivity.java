@@ -86,7 +86,7 @@ public class MainActivity extends Activity {
             pDialog = new ProgressDialog(MainActivity.this);
             pDialog.setMessage("Получение данных ...");
             pDialog.setIndeterminate(false);
-            pDialog.setCancelable(true);
+            pDialog.setCancelable(false);
             pDialog.show();
         }
 
