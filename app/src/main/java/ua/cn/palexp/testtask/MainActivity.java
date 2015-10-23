@@ -2,6 +2,9 @@ package ua.cn.palexp.testtask;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -41,6 +44,7 @@ public class MainActivity extends Activity {
     private static final String KEY4 = "key4";
 
     ArrayList<HashMap<String, String>> keyList;
+    int status;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +53,24 @@ public class MainActivity extends Activity {
 
         lv = (ListView)findViewById(R.id.listView);
         tv = (TextView)findViewById(R.id.textView);
-        new TestTask().execute(url);
+
+        if (isOnline()) {
+            new TestTask().execute(url);
+        } else {
+            tv.setText("Пожалуйста, включите интернет и повторите попытку!");
+        }
+    }
+
+    public boolean isOnline() {
+        ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo nInfo = cm.getActiveNetworkInfo();
+        if (nInfo != null && nInfo.isConnected()) {
+            return true; // есть соединение
+        }
+        else {
+            return false; // нет соединения
+        }
+
     }
 
     public class TestTask extends AsyncTask<String,Void, String> {
@@ -77,7 +98,7 @@ public class MainActivity extends Activity {
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
                 urlConnection.connect();
-                int status = urlConnection.getResponseCode();
+                status = urlConnection.getResponseCode();
                 if (status == 200) {
 
                     InputStream inputStream = urlConnection.getInputStream();
@@ -108,7 +129,7 @@ public class MainActivity extends Activity {
             if (result == "E") {
                 if (pDialog.isShowing())
                     pDialog.dismiss();
-                tv.setText("Сервер временно не доступен");
+                tv.setText("Сервер временно не доступен" + "\n" + "Статус сервера: " + status);
             } else {
                 JSONObject json = null;
 
@@ -119,10 +140,9 @@ public class MainActivity extends Activity {
                     Iterator itr = json.keys();
                     while (itr.hasNext()) {
                         String key = itr.next().toString();
-
                         str.put(key, (String) json.get(key));
-                        keyList.add(str);
                     }
+                    keyList.add(str);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -132,7 +152,6 @@ public class MainActivity extends Activity {
                 ListAdapter adapter = new SimpleAdapter(
                         MainActivity.this, keyList,
                         R.layout.items, new String[]{KEY4, KEY3, KEY2, KEY1}, new int[]{R.id.tvKey4, R.id.tvKey3, R.id.tvKey2, R.id.tvKey1});
-
                 lv.setAdapter(adapter);
             }
         }
